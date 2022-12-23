@@ -14,6 +14,7 @@ import NFTContext from "../context/NFTContext";
 import axios from "axios";
 import img09 from "../assets/images/img-01.jpg";
 import { useEffect } from "react";
+import { ethers } from "ethers";
 
 const NftDetails = () => {
   const [nft, setNft] = useState()
@@ -23,16 +24,32 @@ const NftDetails = () => {
 
   const handleGetNFTDetail = async () => {
     const contract = await connectingWithSmartContract()
-    const tokenURI = await contract.tokenURI(id);
-    const item = await contract.getMarketItemById(id)
-    console.log(item)
-    const res = await axios.get(tokenURI);
-    console.log(res.data);
-    setNft(res.data)
+    const data = await contract.getMarketItemById(id)
+
+    let item = {}
+    item.tokenId = data[0].toNumber()
+    item.seller = data[1]
+    item.owner = data[2]
+    item.price = ethers.utils.formatUnits(
+      data[3].toString(),
+      "ether"
+    );
+    item.sold = data[4]
+    item.title = data[5]
+    item.description = data[6]
+    item.startDay = data[7]
+    item.endDay = data[8]
+    item.image = data[9]
+    setNft(item)
+
+
+
+
   }
 
   useEffect(() => {
     handleGetNFTDetail()
+
   }, [])
 
   return (
@@ -81,7 +98,7 @@ const NftDetails = () => {
 
                   <div className="creator__detail">
                     <p>Created By</p>
-                    <h6>{nft?.owner}</h6>
+                    <h6>{`${nft?.seller.substring(0, 4)}...${nft?.seller.substring(nft?.seller.length - 4)}`}</h6>
                   </div>
                 </div>
 

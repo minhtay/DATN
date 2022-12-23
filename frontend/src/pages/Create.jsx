@@ -76,6 +76,19 @@ const Create = () => {
 
   const listNFT = async (e) => {
     e.preventDefault();
+    const title = titleRef.current.value
+    const price = priceRef.current.value
+    const description = descriptionRef.current.value
+    const startDay = startDayRef.current.value
+    const endDay = endDayRef.current.value
+    //Make sure that none of the fields are empty
+    if (!title || !description || !price || !imgUrl || !startDay || !endDay)
+      return;
+
+    const nftJSON = {
+      title, description, price, image: imgUrl, startDay, endDay
+    }
+
     try {
       const metadataURL = await uploadMetadataToIPFS();
       console.log("Please wait...");
@@ -83,7 +96,7 @@ const Create = () => {
       const price = ethers.utils.parseUnits(priceRef.current.value, 'ether')
       let listingPrice = await contract.getListingPrice()
       listingPrice = listingPrice.toString()
-      let transaction = await contract.createToken(metadataURL, price, { value: listingPrice })
+      let transaction = await contract.createToken(title, description, startDay, endDay, imgUrl, metadataURL, price, { value: listingPrice })
       await transaction.wait()
       console.log("Successfully listed your NFT!");
     } catch (error) {

@@ -31,6 +31,11 @@ contract NFT is ERC721URIStorage {
         address payable owner;
         uint256 price;
         bool sold;
+        string title;
+        string description;
+        string target;
+        string deadline;
+        string image;
     }
 
     event idMarketItemCreated(
@@ -38,7 +43,12 @@ contract NFT is ERC721URIStorage {
         address seller,
         address owner,
         uint256 price,
-        bool sold
+        bool sold,
+        string title,
+        string description,
+        string target,
+        string deadline,
+        string image
     );
 
     constructor() ERC721("NFT Metaverse Token", "MYNFT") {
@@ -59,30 +69,52 @@ contract NFT is ERC721URIStorage {
 
     //create "CREATE NFT TOKEN FUNC"
 
-    function createToken(string memory tokenURI, uint256 price)
-        public
-        payable
-        returns (uint256)
-    {
+    function createToken(
+        string memory title,
+        string memory description,
+        string memory target,
+        string memory deadline,
+        string memory image,
+        string memory tokenURI,
+        uint256 price
+    ) public payable returns (uint256) {
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
         _mint(msg.sender, newTokenId);
         _setTokenURI(newTokenId, tokenURI);
-        createMarketItem(newTokenId, price);
+        createMarketItem(
+            newTokenId,
+            price,
+            title,
+            description,
+            target,
+            deadline,
+            image
+        );
 
         return newTokenId;
     }
 
     function getMarketItemById(uint256 tokenId)
         public
+        view
         returns (MarketItem memory item)
     {
         // MarketItem[] memory items = new MarketItem[]();
         MarketItem memory currentItem = idMarketItem[tokenId];
+
         return currentItem;
     }
 
-    function createMarketItem(uint256 tokenId, uint256 price) private {
+    function createMarketItem(
+        uint256 tokenId,
+        uint256 price,
+        string memory title,
+        string memory description,
+        string memory target,
+        string memory deadline,
+        string memory image
+    ) private {
         require(price > 0, "Price must be al lest 1");
         require(
             msg.value == listingPrice,
@@ -94,7 +126,12 @@ contract NFT is ERC721URIStorage {
             payable(msg.sender),
             payable(address(this)),
             price,
-            false
+            false,
+            title,
+            description,
+            target,
+            deadline,
+            image
         );
         _transfer(msg.sender, address(this), tokenId);
 
@@ -103,7 +140,12 @@ contract NFT is ERC721URIStorage {
             msg.sender,
             address(this),
             price,
-            false
+            false,
+            title,
+            description,
+            target,
+            deadline,
+            image
         );
     }
 
@@ -159,7 +201,7 @@ contract NFT is ERC721URIStorage {
         return items;
     }
 
-    //purchase item
+    
     function fetchMyNFT() public view returns (MarketItem[] memory) {
         uint256 totalCount = _tokenIds.current();
         uint256 itemCount = 0;

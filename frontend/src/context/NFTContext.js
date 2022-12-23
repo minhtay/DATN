@@ -129,12 +129,12 @@ export const NFTProvider = ({ children }) => {
       console.log("data", data);
       const items = await Promise.all(
         data.map(
-          async ({ tokenId, seller, owner, price: unformattedPrice }) => {
-            const tokenURI = await contract.tokenURI(tokenId);
+          async ({ tokenId, seller, owner, price: unformattedPrice, description, deadline,target, image, title}) => {
+            // const tokenURI = await contract.tokenURI(tokenId);
 
-            const res = await axios.get(tokenURI);
-            console.log(res);
-            const { image, title, description } = res.data;
+            // const res = await axios.get(tokenURI);
+            // console.log(res);
+            // const { image, title, description } = res.data;
             const price = ethers.utils.formatUnits(
               unformattedPrice.toString(),
               "ether"
@@ -147,6 +147,8 @@ export const NFTProvider = ({ children }) => {
               image,
               title,
               description,
+              deadline,
+              target,
             };
           }
         )

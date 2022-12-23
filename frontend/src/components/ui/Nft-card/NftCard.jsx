@@ -8,7 +8,7 @@ import { Skeleton } from "@mui/material";
 import img09 from "../../../assets/images/ava-01.png";
 
 const NftCard = (props) => {
-  const { title, tokenId, price, creatorImg, image, owner } = props.item;
+  const { title, tokenId, price, creatorImg, image, owner, seller } = props.item;
   const imageRef = useRef()
   const [showModal, setShowModal] = useState(false);
   const [loaded, setLoaded] = useState(false)
@@ -48,7 +48,7 @@ const NftCard = (props) => {
           <div className="creator__info w-100 d-flex align-items-center justify-content-between">
             <div>
               <h6>Created By</h6>
-              <p>{!loaded ? <Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="rounded" style={{ fontSize: "0.9rem" }} /> : `${owner.substring(0, 4)}...${owner.substring(owner.length - 4)}`}</p>
+              <p>{!loaded ? <Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="rounded" style={{ fontSize: "0.9rem" }} /> : `${seller.substring(0, 4)}...${seller.substring(seller.length - 4)}`}</p>
             </div>
 
             <div>
