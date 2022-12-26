@@ -11,13 +11,17 @@ import "../styles/nft-details.css";
 
 import { Link } from "react-router-dom";
 import NFTContext from "../context/NFTContext";
-import axios from "axios";
-import img09 from "../assets/images/img-01.jpg";
 import { useEffect } from "react";
 import { ethers } from "ethers";
+import Identicon from "../components/IdentityIcon";
+import { Skeleton } from "@mui/material";
+import { NFTMarketPlaceAddress } from "../context/constant";
+import ModalPending from "../components/ui/ModalPending/ModalPending";
 
 const NftDetails = () => {
   const [nft, setNft] = useState()
+  const [showModal, setShowModal] = useState(false)
+  const [sell, setSell] = useState(0)
   const { id } = useParams();
 
   const { connectingWithSmartContract } = useContext(NFTContext)
@@ -47,29 +51,61 @@ const NftDetails = () => {
 
   }
 
+  const handleBuyNFT = async () => {
+
+    const contract = await connectingWithSmartContract()
+    try {
+      setShowModal(true)
+      const transaction = await contract.createMarketSale(nft.tokenId, { value: ethers.utils.parseUnits(nft.price, "ether") })
+      await transaction.wait()
+      setSell(1)
+    } catch (error) {
+      console.log(error);
+      setSell(2)
+    }
+  }
+
+  const handleSellNFT = async () => {
+    try {
+      setShowModal(true)
+      const contract = await connectingWithSmartContract()
+      const listing = await contract.getListingPrice();
+      const priceEther = ethers.utils.parseUnits(nft.price, "ether")
+      const listingPrice = listing.toString();
+      const transaction = await contract.reSellToken(nft.tokenId, priceEther, { value: listingPrice })
+      await transaction.wait()
+      setSell(1)
+    } catch (error) {
+      console.log(error);
+      setSell(2)
+    }
+
+  }
+
+
   useEffect(() => {
     handleGetNFTDetail()
-
   }, [])
 
   return (
     <>
+      {showModal && <ModalPending close={setShowModal} create={sell} />}
       <CommonSection title={nft?.title} />
-
       <section>
         <Container>
           <Row>
             <Col lg="6" md="6" sm="6">
-              <img
+              {nft ? (<img
                 src={nft?.image}
                 alt=""
                 className="w-100 single__nft-img"
-              />
+              />) : (<Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="rounded" style={{ width: '100%', height: 546 }} />)}
+
             </Col>
 
             <Col lg="6" md="6" sm="6">
               <div className="single__nft__content">
-                <h2>{nft?.title}</h2>
+                {nft ? (<h2> {nft?.title}</h2>) : (<Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="rounded" style={{ width: '50%' }} />)}
 
                 <div className=" d-flex align-items-center justify-content-between mt-4 mb-4">
                   <div className=" d-flex align-items-center gap-4 single__nft-seen">
@@ -93,19 +129,20 @@ const NftDetails = () => {
 
                 <div className="nft__creator d-flex gap-3 align-items-center">
                   <div className="creator__img">
-                    <img src={img09} alt="" className="w-100" />
+                    {nft ? (<Identicon width={40} address={nft?.seller} />) : (<Skeleton variant="circular" sx={{ bgcolor: '#ffffffaf' }} width={40} height={40} />)}
                   </div>
 
                   <div className="creator__detail">
                     <p>Created By</p>
-                    <h6>{`${nft?.seller.substring(0, 4)}...${nft?.seller.substring(nft?.seller.length - 4)}`}</h6>
+                    {nft ? (<h6>{`${nft?.seller.substring(0, 4)}...${nft?.seller.substring(nft?.seller.length - 4)}`}</h6>) : (<Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="rounded" style={{ width: '100%' }} />)}
+
                   </div>
                 </div>
 
                 <p className="my-4">{nft?.description}</p>
-                <button className="singleNft-btn d-flex align-items-center gap-2 w-100">
+                <button className="singleNft-btn d-flex align-items-center gap-2 w-100" onClick={nft?.owner === NFTMarketPlaceAddress ? handleBuyNFT : handleSellNFT}>
                   <i className="ri-shopping-bag-line"></i>
-                  <Link to="/wallet">Place a Bid</Link>
+                  <Link to="#" >{nft?.owner === NFTMarketPlaceAddress ? "Place a Bid" : "Resell"}</Link>
                 </button>
               </div>
             </Col>

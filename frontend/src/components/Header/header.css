@@ -1,3 +1,9 @@
+svg {
+  vertical-align: top !important;
+}
+a {
+  text-decoration: none !important;
+}
 .header {
   width: 100%;
   height: 70px;
@@ -72,6 +78,20 @@
   color: #fff;
 }
 
+.nav__right .account {
+  padding: 0 15px;
+  border: 1px solid;
+  border-radius: 20px;
+  height: 45px;
+}
+.rotate {
+  transition: 0.5s;
+  transform: rotate(-180deg);
+}
+.non-rotate {
+  transition: 0.5s;
+  transform: rotate(0deg);
+}
 .mobile__menu {
   color: #fff;
   font-size: 1.3rem;

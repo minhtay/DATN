@@ -14,7 +14,7 @@ import axios from "axios";
 import { pinataApi } from "../pinata/pinataApi";
 
 const Market = () => {
-  const { fetchNFTs, fetchMyNFTOrListedNFTs } = useContext(NFTContext)
+  const { fetchNFTs } = useContext(NFTContext)
   const [data, setData] = useState(NFT__DATA);
 
   const handleCategory = () => { };
@@ -74,7 +74,6 @@ const Market = () => {
 
   const handleFetchNFT = async () => {
     const data = await fetchNFTs()
-    console.log(data)
     setData(data)
   }
 

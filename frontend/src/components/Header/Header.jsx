@@ -5,6 +5,11 @@ import Skeleton from '@mui/material/Skeleton';
 import { NavLink, Link } from "react-router-dom";
 import { ethers } from "ethers";
 import NFTContext from "../../context/NFTContext";
+import Identicon from "../IdentityIcon.jsx";
+import { RiArrowDropDownLine } from "react-icons/ri"
+import ModalAccount from "../ModalAccount/ModalAccount";
+
+
 const NAV__LINKS = [
   {
     display: "Home",
@@ -29,10 +34,9 @@ const NAV__LINKS = [
 const Header = () => {
   const headerRef = useRef(null);
   const menuRef = useRef(null);
-  const { connectWallet, currentAccount, isLoading } = useContext(NFTContext)
-
-
-
+  const iconRef = useRef()
+  const { connectWallet, currentAccount, isLoading, isConnected } = useContext(NFTContext)
+  const [showModal, setShowModal] = useState(false)
   useEffect(() => {
     window.addEventListener("scroll", () => {
       if (
@@ -54,6 +58,7 @@ const Header = () => {
 
   return (
     <header className="header" ref={headerRef}>
+      {showModal && <ModalAccount showModal={setShowModal} />}
       <Container>
         <div className="navigation">
           <div className="logo">
@@ -83,12 +88,22 @@ const Header = () => {
           </div>
 
           <div className="nav__right d-flex align-items-center gap-5 ">
-            {isLoading ? <Skeleton sx={{ bgcolor: '#ffffffaf' }} width={120} height={23} /> : (currentAccount ? <div>{`${currentAccount.slice(0, 7)}...${currentAccount.slice(35)}`}</div> : (<button onClick={connectWallet} className="btn d-flex gap-2 align-items-center">
-              <span>
-                <i className="ri-wallet-line"></i>
-              </span>
-              <div>Connect Wallet</div>
-            </button>))}
+            {isLoading ?
+              <Skeleton sx={{ bgcolor: '#ffffffaf' }} width={120} height={23} />
+              : (currentAccount && isConnected ?
+                <div className="d-flex">
+                  <div className="account d-flex align-items-center" style={{ gridColumnGap: "1rem", columnGap: "1rem", cursor: 'pointer' }} onClick={() => setShowModal((prev) => !prev)}>
+                    <Identicon width={30} address={currentAccount}/>  {`${currentAccount.slice(0, 7)}...${currentAccount.slice(35)}`}
+                    <RiArrowDropDownLine style={{ fontSize: 30 }} className={`${showModal ? "rotate" : "non-rotate"}`} />
+                  </div>
+
+                </div> :
+                (<button onClick={connectWallet} className="btn d-flex gap-2 align-items-center">
+                  <span>
+                    <i className="ri-wallet-line"></i>
+                  </span>
+                  <div>Connect Wallet</div>
+                </button>))}
 
             <span className="mobile__menu">
               <i className="ri-menu-line" onClick={toggleMenu}></i>
