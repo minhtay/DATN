@@ -11,15 +11,17 @@ import { CircularProgress } from "@mui/material";
 import { useRef } from "react";
 import { uploadFileToIPFS, uploadJsonToIPFS } from "../pinata/pinata";
 import { ethers } from "ethers";
+import ModalPending from "../components/ui/ModalPending/ModalPending";
 
 const item = {
-  id: "01",
+  tokenId: "01",
   title: "Guard",
-  desc: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam adipisci cupiditate officia, nostrum et deleniti vero corrupti facilis minima laborum nesciunt nulla error natus saepe illum quasi ratione suscipit tempore dolores. Recusandae, similique modi voluptates dolore repellat eum earum sint.",
-  imgUrl: img,
-  creator: "Trista Francis",
-  creatorImg: avatar,
-  currentBid: 7.89,
+  description: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veniam adipisci cupiditate officia, nostrum et deleniti vero corrupti facilis minima laborum nesciunt nulla error natus saepe illum quasi ratione suscipit tempore dolores. Recusandae, similique modi voluptates dolore repellat eum earum sint.",
+  image: img,
+  seller: "Trista Francis",
+  // creatorImg: avatar,
+  price: 7.89,
+  load: true
 };
 
 
@@ -34,8 +36,9 @@ const Create = () => {
   const startDayRef = useRef()
   const endDayRef = useRef()
   const [isLoading, setIsLoading] = useState(false)
-
-
+  const [creating, setCreating] = useState(0)
+  // const [success, setSucess] = useState()
+  const [showModal, setShowModal] = useState(false)
   const handleChangePreview = async (e) => {
     setIsLoading(true)
     const file = e.target.files[0]
@@ -90,6 +93,8 @@ const Create = () => {
     }
 
     try {
+      setShowModal(true)
+      setCreating(0)
       const metadataURL = await uploadMetadataToIPFS();
       console.log("Please wait...");
       const contract = await connectingWithSmartContract();
@@ -99,10 +104,16 @@ const Create = () => {
       let transaction = await contract.createToken(title, description, startDay, endDay, imgUrl, metadataURL, price, { value: listingPrice })
       await transaction.wait()
       console.log("Successfully listed your NFT!");
+      setCreating(1)
+      // setSucess(true)
     } catch (error) {
       console.log(error);
       console.log("Upload error");
+      // setSucess(false)
+      setCreating(2)
     }
+    // setCreating(false)
+
   }
 
   const handleCreateNFT = async () => {
@@ -115,6 +126,7 @@ const Create = () => {
 
   return (
     <>
+      {showModal && <ModalPending create={creating} close={setShowModal} />}
       <CommonSection title="Create Item" />
 
       <section>

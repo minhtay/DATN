@@ -1,8 +1,10 @@
+import { useContext } from "react";
 import "./app.css";
 import Layout from "./components/Layout/Layout";
-import { NFTProvider } from "./context/NFTContext";
+import NFTContext, { NFTProvider } from "./context/NFTContext";
 
 function App() {
+  
   return (
     <NFTProvider>
       <Layout />

@@ -2,5 +2,5 @@
 import NFT from "./utils/artifacts/contracts/NFT.sol/NFT.json";
 
 export const NFTMarketPlaceAddress =
-  "0x8884EBa8a42e7b5029342620f1063F4aC8373A08";
+  "0x40Ed4B32f7173928c25ff255b4990A5e61FF3574";
 export const NFTMarketPlaceABI = NFT.abi;

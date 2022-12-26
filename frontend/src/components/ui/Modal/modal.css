@@ -20,6 +20,8 @@
   padding: 30px;
   z-index: 5555555 !important;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 
 .single__modal h6 {

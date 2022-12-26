@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import "./nft-card.css";
@@ -6,13 +6,50 @@ import "./nft-card.css";
 import Modal from "../Modal/Modal";
 import { Skeleton } from "@mui/material";
 import img09 from "../../../assets/images/ava-01.png";
-
+import NFTContext from "../../../context/NFTContext";
+import Identicon from "../../IdentityIcon";
+import ModalPending from "../ModalPending/ModalPending";
+import { ethers } from "ethers";
 const NftCard = (props) => {
-  const { title, tokenId, price, creatorImg, image, owner, seller } = props.item;
-  const imageRef = useRef()
+  const { title, tokenId, price, image, owner, seller, load } = props.item;
+  const { connectingWithSmartContract, } = useContext(NFTContext)
   const [showModal, setShowModal] = useState(false);
-  const [loaded, setLoaded] = useState(false)
+  const { sale } = props
+  const [loaded, setLoaded] = useState(load ? load : false)
+  const [sell, setSell] = useState(0)
 
+  // const amount = ethers.utils.parseUnits(price, "ether")
+
+  const handleBuyNFT = async () => {
+
+    const contract = await connectingWithSmartContract()
+    try {
+      setShowModal(true)
+      const transaction = await contract.createMarketSale(tokenId, { value: ethers.utils.parseUnits(price, "ether") })
+      await transaction.wait()
+      setSell(1)
+    } catch (error) {
+      console.log(error);
+      setSell(2)
+    }
+  }
+
+  const handleSellNFT = async () => {
+    try {
+      setShowModal(true)
+      const contract = await connectingWithSmartContract()
+      const listing = await contract.getListingPrice();
+      const priceEther = ethers.utils.parseUnits(price, "ether")
+      const listingPrice = listing.toString();
+      const transaction = await contract.reSellToken(tokenId, priceEther, { value: listingPrice })
+      await transaction.wait()
+      setSell(1)
+    } catch (error) {
+      console.log(error);
+      setSell(2)
+    }
+
+  }
 
   // useEffect(() => {
   //   if (!imageRef.current) {
@@ -25,10 +62,9 @@ const NftCard = (props) => {
   //   console.log('is load:', isLoading);
   // }, [imageRef.current])
 
-  console.log(loaded)
-
   return (
     <div className="single__nft__card">
+      {showModal && <ModalPending create={sell} close={setShowModal} />}
       <div className="nft__img">
         {!loaded && <Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="rounded" style={{ width: '100%', height: 221 }} />}
         <img src={image} alt="" className="w-100" onLoad={() => setLoaded(true)} style={!loaded ? { display: "none" } : {}} />
@@ -41,7 +77,7 @@ const NftCard = (props) => {
 
         <div className="creator__info-wrapper d-flex gap-3">
           <div className="creator__img">
-            {!loaded ? <Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="circular" width={40} height={40} /> : <img src={img09} alt="" className="w-100" />}
+            {!loaded ? <Skeleton sx={{ bgcolor: '#ffffffaf' }} variant="circular" width={40} height={40} /> : <Identicon address={seller} width={30} />}
 
           </div>
 
@@ -61,12 +97,12 @@ const NftCard = (props) => {
         <div className=" mt-3 d-flex align-items-center justify-content-between">
           <button
             className="bid__btn d-flex align-items-center gap-1"
-            onClick={() => setShowModal(true)}
+            onClick={!sale ? handleBuyNFT : handleSellNFT}
           >
-            <i className="ri-shopping-bag-line"></i> Place Bid
+            <i className="ri-shopping-bag-line"></i> {sale ? "Sell" : "Place Bid"}
           </button>
 
-          {showModal && <Modal setShowModal={setShowModal} />}
+          {/* {showModal && <Modal setShowModal={setShowModal} />} */}
 
           <span className="history__link">
             <Link to="#">View History</Link>

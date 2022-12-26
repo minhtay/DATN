@@ -27,15 +27,26 @@ const connectingWithSmartContract = async () => {
     console.log(error);
   }
 };
+
 export const NFTContext = createContext();
 
 export const NFTProvider = ({ children }) => {
   const [currentAccount, setCurrentAccount] = useState();
   const [isLoading, setIsLoading] = useState(false);
-
+  const [networkError, setNetworkError] = useState(false);
+  const [balance, setBalance] = useState();
+  const [isConnected, setIsConnected] = useState(false);
   const checkIsConnected = async () => {
     setIsLoading(true);
     if (!window.ethereum) return console.log("Please insall Metamask");
+    const networkVersion = window.ethereum.networkVersion;
+    const currentNetWork = networkVersion?.toString();
+
+    if (currentNetWork !== "5") {
+      setNetworkError(true);
+    } else {
+      setNetworkError(false);
+    }
     try {
       const accounts = await window.ethereum.request({
         method: "eth_accounts",
@@ -43,7 +54,8 @@ export const NFTProvider = ({ children }) => {
       if (accounts.length > 0) {
         setCurrentAccount(accounts[0]);
       } else {
-        console.log("No account found");
+        setCurrentAccount();
+        localStorage.removeItem("isConnect");
       }
     } catch (error) {
       console.log(error);
@@ -60,6 +72,8 @@ export const NFTProvider = ({ children }) => {
       });
       if (accounts.length > 0) {
         setCurrentAccount(accounts[0]);
+        localStorage.setItem("isConnect", JSON.stringify({ isConnect: true }));
+        setIsConnected(true);
       } else {
         console.log("No account found");
       }
@@ -69,21 +83,46 @@ export const NFTProvider = ({ children }) => {
     setIsLoading(false);
   };
 
+  const disconnectWallet = async () => {
+    localStorage.removeItem("isConnect");
+    setIsConnected(false);
+  };
+
+  const checkFakeConnect = async () => {
+    const items = JSON.parse(localStorage.getItem("isConnect"));
+    if (items) {
+      setIsConnected(true);
+    } else {
+      setIsConnected(false);
+    }
+  };
+
   window.ethereum.on("accountsChanged", function (accounts) {
     setIsLoading(true);
     setCurrentAccount(accounts[0]);
     setIsLoading(false);
   });
 
-  const uploadToIFPS = async (file) => {
-    try {
-      const added = await client.add({ content: file });
-      const url = `https://ipfs.infura.io:5001/ipfs/${added.path}`;
-      return url;
-    } catch (error) {
-      console.log(error);
+  window.ethereum.on("chainChanged", (networkId) => {
+    if (networkId === "0x5") {
+      console.log(networkId);
+      setNetworkError(false);
+    } else {
+      setNetworkError(true);
+      console.log(typeof networkId);
+      console.log("Wtf?");
     }
-  };
+  });
+
+  // const uploadToIFPS = async (file) => {
+  //   try {
+  //     const added = await client.add({ content: file });
+  //     const url = `https://ipfs.infura.io:5001/ipfs/${added.path}`;
+  //     return url;
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const createNFT = async (formInput, fileUrl) => {
     const { name, description, price } = formInput;
@@ -129,7 +168,17 @@ export const NFTProvider = ({ children }) => {
       console.log("data", data);
       const items = await Promise.all(
         data.map(
-          async ({ tokenId, seller, owner, price: unformattedPrice, description, deadline,target, image, title}) => {
+          async ({
+            tokenId,
+            seller,
+            owner,
+            price: unformattedPrice,
+            description,
+            deadline,
+            target,
+            image,
+            title,
+          }) => {
             // const tokenURI = await contract.tokenURI(tokenId);
 
             // const res = await axios.get(tokenURI);
@@ -199,21 +248,31 @@ export const NFTProvider = ({ children }) => {
     }
   };
 
-  const buyNFT = async (nft) => {
-    try {
-      const contract = await connectingWithSmartContract();
-      const price = ethers.utils.parseUnits(nft.price.toString(), "ethers");
-      const transaction = await contract.createMarketSale(nft.tokenId, {
-        value: price,
-      });
-      await transaction.wait();
-    } catch (error) {
-      console.log(error);
-    }
+  // const buyNFT = async (nft) => {
+  //   try {
+  //     const contract = await connectingWithSmartContract();
+  //     const price = ethers.utils.parseUnits(nft.price.toString(), "ethers");
+  //     const transaction = await contract.createMarketSale(nft.tokenId, {
+  //       value: price,
+  //     });
+  //     await transaction.wait();
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
+  const balanceOf = async () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const balance = await signer.getBalance();
+    const balanceETH = ethers.utils.formatEther(balance);
+    setBalance(Number(balanceETH).toFixed(4));
   };
 
   useEffect(() => {
     checkIsConnected();
+    balanceOf();
+    checkFakeConnect();
   }, [currentAccount]);
 
   return (
@@ -221,13 +280,19 @@ export const NFTProvider = ({ children }) => {
       value={{
         connectWallet,
         currentAccount,
+        setCurrentAccount,
         isLoading,
-        uploadToIFPS,
+        // uploadToIFPS,
         createNFT,
         fetchNFTs,
         fetchMyNFTOrListedNFTs,
-        buyNFT,
+        // buyNFT,
         connectingWithSmartContract,
+        networkError,
+        balance,
+        isConnected,
+        setIsConnected,
+        disconnectWallet,
       }}
     >
       {children}
